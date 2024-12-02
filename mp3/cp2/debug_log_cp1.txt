@@ -1,0 +1,34 @@
+
+In this file, we will analyze some bugs we encountered in the process of doing this CP.
+
+Three things of every bugs will be analyzed, which are
+(1) bugs we encountered,
+(2) the file(s) associated with the bug
+(3) how they were fixed by us.
+
+1st, Lack of sufficient validation criteria for file in elf.c
+
+(1) the bug is that when verifying the file, we can't fully and efficiently to check all things to verify whether
+the file meets all requirements before loading, which lead to can not effectively check some file not meeting all
+requirement to load and cause some problems
+
+(2) the bug is in the elf.c
+
+(3) To solve it, we search some source, which is in ECE391 course website such as ELF format documentation.
+After reading this website, we can find that what cases shoulb be used to check and can find necessary things need
+to ne tested by us.
+
+2nd, in fs.c, in order to confirm that the file system can properly index inodes and access data blocks in different numbers of files, we created the following:
+
+1.empty // empty file
+2. read_me // short file, containing common ascii characters
+3. write_me // empty file for read and write tests
+4. i_am_long // long file occupying 3 data blocks, used to confirm the cross-data block index read and write capabilities;
+
+However, due to a code bug in src/util/mkfs.c, when empty files are included, there will be problems when counting the number of file data blocks. Because we use this version of mkfs to encapsulate the file system and use an image containing empty files for testing, our code cannot work properly without empty files, that is, in the correct file system. I didn't find out until the relevant information was published on piazza.
+
+We used the corrected mkfs and used HexEditor to lock the exact data location and correct the data block index error.
+
+3rd, For block driver, we think this is the most challenging part. The total time we spent on studying the manual and debugging the code far exceeds the other two parts. The experience of solving bugs is very exciting:
+
+Regarding the content of studying the virt queue mechanism, we suffered a lot on this, and finally made some progress after asking TA related questions. We did not realize the role of vq index in the indirect queue at first, so that the read and write functions could not interact with the device until we realized that the avail queue should be initialized before notifying the request. At the same time, we also spent a lot of time to understand which parameters need to be set.

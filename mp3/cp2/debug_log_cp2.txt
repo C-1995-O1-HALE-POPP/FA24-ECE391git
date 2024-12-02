@@ -1,0 +1,31 @@
+
+In this file, we will analyze some bugs we encountered in the process of doing this CP.
+
+Three things of every bugs will be analyzed, which are
+(1) bugs we encountered,
+(2) the file(s) associated with the bug
+(3) how they were fixed by us.
+
+1. memory{.c,.h}
+    Once you have a memory image, things become very simple. However, I 
+    did not use the walk_pt() helper function at the beginning, so the 
+    overall implementation will be a little redundant. In order to fully 
+    reclaim the allocated virtual address when exiting the process, it 
+    is necessary to implement the page table recycling, which we found 
+    in the debug. In addition, it is necessary to distinguish between 
+    direct memory mapping in the kernel (pma==vma) and non-equivalent 
+    mapping in user space. We pay special attention to this in 
+    memory_alloc_and_map_page.
+
+2. process{.c,.h}, thrasm.s
+    We once overlooked some registers when implementing 
+    _thread_finish_jump, which resulted in the inability to correctly 
+    switch from user mode to trap handler. Similarly, blindly clearing 
+    the iotab of the process was also a problem we encountered - we 
+    found that process_exec did not need to do this work - at this time 
+    we could not open trek for a long time.
+
+2. syscall.c, trapasm.S
+    This is the easiest part. Of course, pay attention to the judgment 
+    of unreasonable situations. User code is often wild. Also, some new 
+    understanding of fd is required here.
